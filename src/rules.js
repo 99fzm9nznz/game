@@ -30,7 +30,7 @@ export class Game {
  jump(){if(this.status==='playing'&&[0,4,5].includes(this.stage)&&this.grounded){this.vy=9;this.grounded=false;this.emit('jump');}}
  tracePoint(x,y){if(this.status!=='playing'||this.stage!==1)return;let best=-1,dist=Infinity;for(let i=this.trace;i<Math.min(TRACE_PATH.length,this.trace+15);i++){const p=TRACE_PATH[i],d=Math.hypot(p.x-x,p.y-y);if(d<dist){dist=d;best=i;}}if(dist<18){this.trace=Math.max(this.trace,best);if(this.trace>=TRACE_PATH.length-3)this.win();return true;}return false;}
  crack(){if(this.status!=='playing'||this.stage!==1)return;this.strikes++;this.emit('crack');if(this.strikes>=3)this.lose('Le biscuit s’est brisé. Reprends le tracé lentement, en suivant la ligne dorée.');}
- tug(){if(this.status!=='playing'||this.stage!==2||this.elapsed-this.lastPull<.2)return;this.lastPull=this.elapsed;const cycle=this.elapsed%.85/.85,good=Math.abs(cycle-.5)<.19;this.pull=Math.min(1,this.pull+(good?.082:-.026));this.emit(good?'pull':'miss');if(this.pull>=1)this.win();}
+ tug(strength=1){if(this.status!=='playing'||this.stage!==2||this.elapsed-this.lastPull<.2)return;this.lastPull=this.elapsed;const cycle=this.elapsed%.85/.85,good=Math.abs(cycle-.5)<.19;this.pull=Math.min(1,this.pull+(good?.082:-.026)*strength);this.emit(good?'pull':'miss');if(this.pull>=1)this.win();}
  charge(){if(this.status==='playing'&&this.stage===3&&!this.shot){this.charging=true;this.power=0;}}
  release(){if(!this.charging||this.status!=='playing')return;this.charging=false;const end=marbleLanding(this.aim,this.power);this.shot={end,age:0,start:{x:0,z:5},hit:Math.hypot(end.x-this.targetX,end.z+10)<1.1};this.emit('throw');}
  update(dt,input={}){
