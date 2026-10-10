@@ -9,16 +9,21 @@ test('standalone export preserves dollar expressions and escapes closing script 
  const root=await mkdtemp(join(tmpdir(),'arena-export-'));
  try{
   await mkdir(join(root,'dist/assets'),{recursive:true});
+  await mkdir(join(root,'dist/audio'),{recursive:true});
+  await writeFile(join(root,'dist/audio/CREDITS.md'),'SIWIS & <licence> CC BY 4.0');
+  const ogg=Buffer.from('OggS-test-audio');
+  await writeFile(join(root,'dist/audio/shot.ogg'),ogg);
   const source='const text = '+JSON.stringify("$& $` $' </script>")+';';
   const css='body::after { content: "$&"; }';
   await writeFile(join(root,'dist/assets/game.js'),source);
   await writeFile(join(root,'dist/assets/game.css'),css);
-  await writeFile(join(root,'dist/index.html'),'<html><head><script type="module" src="./assets/game.js"></script><link rel="stylesheet" href="./assets/game.css"></head><body></body></html>');
+  await writeFile(join(root,'dist/index.html'),'<html><head><script type="module" src="./assets/game.js"></script><link rel="stylesheet" href="./assets/game.css"></head><body><a class="credits-link" href="./audio/CREDITS.md">Crédits</a></body></html>');
   execFileSync(process.execPath,[fileURLToPath(new URL('../scripts/standalone.mjs',import.meta.url))],{cwd:root});
   const html=await readFile(join(root,'dist/jeu-squid.html'),'utf8');
   assert.equal(html.match(/<script/g).length,1);
   assert.ok(html.includes(source.replaceAll('</script','<\\/script')));
-  assert.ok(html.includes(css));
+  assert.ok(html.includes(css));assert.ok(html.includes('SIWIS &amp; &lt;licence&gt; CC BY 4.0'));assert.ok(html.includes('offline-credits'));
+  assert.ok(html.includes('data:audio/ogg;base64,'+ogg.toString('base64')));
   assert.ok(!html.includes('src="./assets'));
  }finally{await rm(root,{recursive:true,force:true});}
 });

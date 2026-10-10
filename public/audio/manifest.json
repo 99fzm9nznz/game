@@ -1,0 +1,170 @@
+{
+  "shot": {
+    "file": "shot.ogg",
+    "duration": 1.7,
+    "category": "effects",
+    "description": "Layered blast, low-pressure thump and courtyard reflections; no recording of a weapon"
+  },
+  "impact": {
+    "file": "impact.ogg",
+    "duration": 0.5,
+    "category": "effects",
+    "description": "Original sound design"
+  },
+  "body": {
+    "file": "body.ogg",
+    "duration": 0.8,
+    "category": "effects",
+    "description": "Original sound design"
+  },
+  "step-sand": {
+    "file": "step-sand.ogg",
+    "duration": 0.3,
+    "category": "effects",
+    "description": "Original layered sand footstep"
+  },
+  "step-stone": {
+    "file": "step-stone.ogg",
+    "duration": 0.3,
+    "category": "effects",
+    "description": "Original layered stone footstep"
+  },
+  "step-metal": {
+    "file": "step-metal.ogg",
+    "duration": 0.3,
+    "category": "effects",
+    "description": "Original layered metal footstep"
+  },
+  "glass": {
+    "file": "glass.ogg",
+    "duration": 2.1,
+    "category": "effects",
+    "description": "Original sound design"
+  },
+  "crack": {
+    "file": "crack.ogg",
+    "duration": 0.45,
+    "category": "effects",
+    "description": "Original sound design"
+  },
+  "rope": {
+    "file": "rope.ogg",
+    "duration": 0.6,
+    "category": "effects",
+    "description": "Original sound design"
+  },
+  "marble": {
+    "file": "marble.ogg",
+    "duration": 0.7,
+    "category": "effects",
+    "description": "Original sound design"
+  },
+  "throw": {
+    "file": "throw.ogg",
+    "duration": 0.3,
+    "category": "effects",
+    "description": "Original sound design"
+  },
+  "breath": {
+    "file": "breath.ogg",
+    "duration": 3.0,
+    "category": "effects",
+    "description": "Original designed breathing, no sampled performance"
+  },
+  "victory": {
+    "file": "victory.ogg",
+    "duration": 3.6,
+    "category": "music",
+    "description": "Original four-note cue"
+  },
+  "defeat": {
+    "file": "defeat.ogg",
+    "duration": 3.6,
+    "category": "music",
+    "description": "Original four-note cue"
+  },
+  "courtyard-score": {
+    "file": "courtyard-score.ogg",
+    "duration": 16.0,
+    "category": "music",
+    "description": "Original composition: Cour des silences, 16-second stereo loop"
+  },
+  "doll-chant": {
+    "file": "doll-chant.ogg",
+    "duration": 3.4999,
+    "category": "voices",
+    "description": "French neural voice sings Un, deux, trois, soleil, arranged on four original notes"
+  },
+  "stop": {
+    "file": "stop.ogg",
+    "duration": 1.0449,
+    "category": "voices",
+    "description": "French SIWIS neural voice: Ne bougez plus."
+  },
+  "ready": {
+    "file": "ready.ogg",
+    "duration": 1.9156,
+    "category": "voices",
+    "description": "French SIWIS neural voice: Bienvenue dans la cour des silences."
+  },
+  "eliminated": {
+    "file": "eliminated.ogg",
+    "duration": 1.0217,
+    "category": "voices",
+    "description": "French SIWIS neural voice: Joueur éliminé."
+  },
+  "qualified": {
+    "file": "qualified.ogg",
+    "duration": 2.6935,
+    "category": "voices",
+    "description": "French SIWIS neural voice: Épreuve réussie. Préparez-vous pour la suivante."
+  },
+  "stage-1": {
+    "file": "stage-1.ogg",
+    "duration": 2.5426,
+    "category": "voices",
+    "description": "French SIWIS neural voice: Découpez le biscuit. Gardez la main calme."
+  },
+  "stage-2": {
+    "file": "stage-2.ogg",
+    "duration": 2.0085,
+    "category": "voices",
+    "description": "French SIWIS neural voice: Tirez ensemble, au bon moment."
+  },
+  "stage-3": {
+    "file": "stage-3.ogg",
+    "duration": 1.9969,
+    "category": "voices",
+    "description": "French SIWIS neural voice: Trois billes dans le cercle pour survivre."
+  },
+  "stage-4": {
+    "file": "stage-4.ogg",
+    "duration": 2.8096,
+    "category": "voices",
+    "description": "French SIWIS neural voice: Choisissez votre dalle. Le verre peut céder."
+  },
+  "stage-5": {
+    "file": "stage-5.ogg",
+    "duration": 2.6122,
+    "category": "voices",
+    "description": "French SIWIS neural voice: Dernière épreuve. Rejoignez la sortie."
+  },
+  "panic": {
+    "file": "panic.ogg",
+    "duration": 1.8344,
+    "category": "voices",
+    "description": "French SIWIS neural voice: Attention ! Ne bougez plus !"
+  },
+  "scream": {
+    "file": "scream.ogg",
+    "duration": 0.4992,
+    "category": "voices",
+    "description": "French SIWIS neural voice: Ah !"
+  },
+  "gasp": {
+    "file": "gasp.ogg",
+    "duration": 1.0913,
+    "category": "voices",
+    "description": "French SIWIS neural voice: Oh ! Non !"
+  }
+}

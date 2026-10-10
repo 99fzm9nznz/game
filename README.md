@@ -61,12 +61,26 @@ Pour tester la connexion avec un serveur PeerJS local en développement uniqueme
 - P, Échap ou **PAUSE** : suspendre le jeu. Un changement d’onglet le met aussi en pause.
 - Les flèches tactiles, le saut et les boutons d’action sont disponibles sur mobile.
 
+## Refonte immersive de la première épreuve
+
+Poupée mécanique dédiée avec tête, pupilles et bouche animées ; comptine française intégrée dont la vitesse varie avec le cycle commun. La tête se retourne avant la détection. Un tir déclenche impact, particules rouges et chute articulée ; le corps reste dans la cour. Les éliminations sont décidées par l’hôte et rejouées une seule fois sur chaque appareil. Les spectateurs peuvent choisir le survivant qu’ils observent. **POUPÉE / JOUEUR** (C) change de caméra, sans arrêter la partie.
+
+**RÉGLAGES** propose les volumes séparés (voix, bruitages, musique) et les qualités Automatique, Élevée, Équilibrée et Légère. Le mode automatique réduit les effets si nécessaire ; le mode léger convient aux petits écrans.
+
+Le bilan détaillé, les choix physiques, l’étude GLB/GLTF et les limites réseau sont dans [docs/immersion.md](docs/immersion.md). La capacité validée reste 4 joueurs ; l’étude de 20/50/100 ne modifie pas cette limite.
+
 ## Musique et rendu
 
-La musique d’ambiance est une composition procédurale originale. Aucune musique officielle de Squid Game n’est incluse. **+ AUDIO** permet de choisir sur son appareil un fichier audio qu’on a le droit d’utiliser ; ce fichier reste local et n’est pas téléversé. Le navigateur active le son après une interaction.
+Le jeu livre **28 fichiers OGG** : comptine et annonces françaises, exclamations, respiration, tir/impact/chute, pas sur sable/pierre/métal, biscuit, corde, billes, verre, musique originale en boucle et jingles de victoire/défaite. Ils fonctionnent sans importer de fichier. Les voix sont générées avec Piper/SIWIS (attribution CC BY 4.0) ; la musique et les bruitages sont des créations originales CC0. Aucun enregistrement de la série n’est inclus. Voir [les crédits](public/audio/CREDITS.md).
 
-Personnages procéduraux animés, survêtements numérotés, gardes, décors distincts, textures de sol, ombres et halos lumineux. Les figurants constituent une ambiance visuelle : les vrais participants des salons multijoueurs ont des avatars synchronisés distincts. Le rendu est stylisé, sans modèles photoréalistes externes. Une accélération graphique est recommandée.
+Le mixeur Web Audio spatialise les événements, suit la caméra et suspend les sons pendant la pause. Le navigateur active le son après une interaction. L’import facultatif de musique reste disponible dans le code ; les sons intégrés sont utilisés par défaut. `scripts/generate-audio.py` permet de reproduire les assets avec un modèle vocal local, NumPy/SciPy, Piper et FFmpeg ; ces outils ne sont pas nécessaires pour jouer ou construire le site.
+
+Les personnages utilisent une hiérarchie articulée avec genoux et coudes, survêtements numérotés et identités de salon. La cour bénéficie de décors et de gardes enrichis. Les chutes sont une solution déterministe adaptée à WebGL, avec particules sous gravité ; elles ne constituent pas une simulation rigide complète. Le rendu reste stylisé. Les cinq autres épreuves conservent leurs règles et leurs décors, tout en utilisant les nouveaux personnages et fichiers sonores. Les figurants solo restent décoratifs et ne sont pas des bots de salon.
 
 ## Validation
 
 `npm test` exécute les tests des règles, des sauts, des collisions, des chutes, des épreuves et de la progression, ainsi que des salons (limite de joueurs, simulation commune, pause, qualification, spectateurs, déconnexions et nouvelle partie). Les parcours du pont et de la course finale sont testés avec des sauts simulés par la physique réelle du jeu.
+
+Les tests couvrent aussi les cycles de la poupée, sa grâce de détection, les éliminations simultanées, les événements sonores dédupliqués, les corps persistants et les fichiers audio embarqués. Les validations navigateur utilisent des processus Chromium séparés avec un rendez-vous PeerJS et un TURN/TCP locaux, plus un viewport mobile et la version autonome privée de réseau après chargement. Elles ne prouvent pas une connexion sur tous les réseaux Internet.
+
+Pour estimer le budget de diffusion JSON (projection de population, sans lever la limite jouable) : `node scripts/network-budget.mjs`. Les états sont transmis à 12,5 Hz ; les effets envoyés depuis le dernier paquet et un battement d’entrée réduisent le trafic. Un serveur dédié externe est recommandé avant de viser 50/100 joueurs ; GitHub Pages continue à servir le client statique.

@@ -1,3 +1,4 @@
+import {resetSun,advanceSun} from './sun-cycle.js';
 export const STAGES = [
   {name:'1, 2, 3 soleil',subtitle:'La cour des silences',time:70,kind:'run',instruction:'Avance au feu vert. Au feu rouge, immobilise-toi, même pendant un saut. Contourne les barrières pour atteindre la ligne.',controls:'ZQSD / WASD ou flèches · Espace : sauter'},
   {name:'Le Dalgona',subtitle:'Une main parfaitement calme',time:65,kind:'trace',instruction:'Maintiens le doigt ou le clic et suis le contour de l’étoile depuis le point lumineux. Tu peux relâcher pour reprendre. Trois écarts brisent le biscuit.',controls:'Souris ou doigt : tracer lentement le contour'},
@@ -23,9 +24,9 @@ export function glassAt(x,z){for(let row=0;row<8;row++)if(Math.abs(z-(-3-row*5))
 export function marbleLanding(aim,power){const distance=4+power*14;return {x:Math.sin(aim*.36)*distance,z:5-Math.cos(aim*.36)*distance};}
 export class Game {
  constructor(){this.stage=0;this.status='intro';this.position={x:0,y:0,z:6};this.elapsed=0;this.events=[];this.reset(0,false);}
- reset(stage=this.stage,play=true){this.stage=stage;this.status=play?'playing':'intro';this.remaining=STAGES[stage].time;this.position={x:stage===4?-1.65:0,y:0,z:6};this.vy=0;this.grounded=true;this.elapsed=0;this.red=false;this.phase=3.6;this.grace=0;this.transition=0;this.message='';this.trace=0;this.strikes=0;this.pull=.5;this.lastPull=-1;this.broken=new Set();this.aim=0;this.power=0;this.charging=false;this.shot=null;this.hits=0;this.misses=0;this.targetX=-1.4;this.events.push({type:'stage',stage});}
- emit(type,extra={}){this.events.push({type,...extra});}
- lose(message){if(this.status!=='playing')return;this.status='lost';this.message=message;this.emit('lose');}
+ reset(stage=this.stage,play=true){this.stage=stage;this.status=play?'playing':'intro';this.remaining=STAGES[stage].time;this.position={x:stage===4?-1.65:0,y:0,z:6};this.vy=0;this.grounded=true;this.elapsed=0;this.lastStep=0;resetSun(this);this.externalSun=false;this.death=null;this.effects=[];this.transition=0;this.message='';this.trace=0;this.strikes=0;this.pull=.5;this.lastPull=-1;this.broken=new Set();this.aim=0;this.power=0;this.charging=false;this.shot=null;this.hits=0;this.misses=0;this.targetX=-1.4;this.emit('stage',{stage});}
+ emit(type,extra={}){const event={type,...extra,seq:this.effectSeq=(this.effectSeq||0)+1,stage:this.stage,at:this.elapsed,position:{...this.position}};this.events.push(event);this.effects.push(event);if(this.effects.length>32)this.effects.shift();}
+ lose(message){if(this.status!=='playing')return;this.status='lost';this.message=message;this.death={at:this.elapsed,position:{...this.position},cause:this.stage===0?'shot':'fall',seed:Math.round((this.elapsed*137+this.position.x*31+this.position.z*17)*100)>>>0};this.emit('lose',{death:this.death});}
  win(){if(this.status!=='playing')return;this.status=this.stage===5?'won':'transition';this.transition=3.2;this.message=this.stage===5?'Tu as franchi les six épreuves. Tu es le dernier survivant.':'Épreuve réussie. La prochaine commence dans quelques secondes.';this.emit('win');}
  jump(){if(this.status==='playing'&&[0,4,5].includes(this.stage)&&this.grounded){this.vy=9;this.grounded=false;this.emit('jump');}}
  tracePoint(x,y){if(this.status!=='playing'||this.stage!==1)return;let best=-1,dist=Infinity;for(let i=this.trace;i<Math.min(TRACE_PATH.length,this.trace+15);i++){const p=TRACE_PATH[i],d=Math.hypot(p.x-x,p.y-y);if(d<dist){dist=d;best=i;}}if(dist<18){this.trace=Math.max(this.trace,best);if(this.trace>=TRACE_PATH.length-3)this.win();return true;}return false;}
@@ -40,11 +41,13 @@ export class Game {
  if(this.stage===2){this.pull-=dt*.024;if(this.pull<=0)this.lose('L’équipe adverse a pris le dessus. Tire lorsque le curseur atteint la zone verte.');return;}
  if(this.stage===3){this.aim=Math.max(-1,Math.min(1,this.aim+(input.side||0)*dt*.85));if(this.charging)this.power=(this.power+dt*.58)%1;if(this.shot){this.shot.age+=dt;if(this.shot.age>=1.15){if(this.shot.hit){this.hits++;this.emit('score');}else{this.misses++;this.emit('miss');}this.shot=null;this.targetX=[-1.4,1.1,0,1.7,-.9,.6][(this.hits+this.misses)%6];if(this.hits>=3)this.win();else if(this.misses>=5)this.lose('Cinq billes ont manqué le cercle. Ajuste la direction et la puissance.');}}return;}
  if(this.stage===1)return;
- if(this.stage===0){this.phase-=dt;this.grace=Math.max(0,this.grace-dt);if(this.phase<=0){this.red=!this.red;this.phase=this.red?1.9+Math.random()*1.3:2.6+Math.random()*1.4;this.grace=this.red?.28:0;this.emit('signal',{red:this.red});}if(this.red&&this.grace<=0&&(input.forward||input.side||Math.abs(this.vy)>.1)){this.lose('La poupée t’a vu bouger. Au feu rouge, arrête-toi et évite d’être en plein saut.');return;}}
+ if(this.stage===0){if(!this.externalSun&&advanceSun(this,dt))this.emit('signal',{red:this.red});}
  const speed=this.stage===4?5.8:7;const forward=input.forward||0,side=input.side||0;const norm=Math.max(1,Math.hypot(forward,side));const nx=Math.max(this.stage===4?-4:-8,Math.min(this.stage===4?4:8,this.position.x+side*speed*dt/norm));const nz=Math.min(8,this.position.z-forward*speed*dt/norm);
  const obstacles=this.stage===0?OBSTACLES:this.stage===5?HURDLES:[];
  const blocked=(x,z)=>obstacles.some(o=>Math.abs(x-o.x)<o.w/2+.3&&Math.abs(z-o.z)<o.d/2+.25&&this.position.y<o.h);
- if(!blocked(nx,this.position.z))this.position.x=nx;if(!blocked(this.position.x,nz))this.position.z=nz;
+ const before={...this.position};const moveX=!blocked(nx,this.position.z)?nx:this.position.x,moveZ=!blocked(moveX,nz)?nz:this.position.z;
+ if(this.stage===0&&this.red&&this.grace<=0&&(Math.abs(moveX-this.position.x)+Math.abs(moveZ-this.position.z)>.00001||!this.grounded)){this.lose('La poupée t’a vu bouger. Au feu rouge, arrête-toi et évite d’être en plein saut.');return;}
+ this.position.x=moveX;this.position.z=moveZ;
  const oldY=this.position.y;
  let supported=true;
  if(this.stage===4)supported=supportsBridge(this.position.x,this.position.z,this.broken);
@@ -52,6 +55,7 @@ export class Game {
  const surface=obstacles.filter(o=>Math.abs(this.position.x-o.x)<o.w/2+.2&&Math.abs(this.position.z-o.z)<o.d/2+.2&&oldY>=o.h-.03).reduce((h,o)=>Math.max(h,o.h),0);
  if(!this.grounded||!supported||this.position.y>surface+.03){this.grounded=false;this.vy-=22*dt;this.position.y+=this.vy*dt;if(this.position.y<=surface&&this.vy<=0&&supported&&oldY>=surface-.2){this.position.y=surface;this.vy=0;this.grounded=true;this.emit('land');}}
  if(this.stage===4&&this.grounded){const tile=glassAt(this.position.x,this.position.z);if(tile&&SAFE_GLASS[tile.row]!==tile.side){this.broken.add(`${tile.row}:${tile.side}`);this.grounded=false;this.vy=-1;this.emit('glass');}}
+ if(this.grounded&&Math.hypot(this.position.x-before.x,this.position.z-before.z)>.001&&this.elapsed-this.lastStep>.34){this.lastStep=this.elapsed;this.emit('step',{surface:this.stage===4?'metal':this.stage===5?'stone':'sand'});}
  if(this.position.y<-4){this.lose(this.stage===4?'La dalle a cédé ou tu as manqué ton saut. Observe les fissures avant de choisir.':'Tu es tombé dans une fosse. Saute juste avant le bord.');return;}
  if(this.stage===5&&this.position.y<1.35){for(const b of BEAMS)if(Math.abs(this.position.z-b.z)<.5&&Math.abs(this.position.x-Math.sin(this.elapsed*b.speed+b.phase)*6)<2){this.lose('Une barre mobile t’a touché. Saute au-dessus ou passe sur le côté.');return;}}
  if(this.position.z<=(this.stage===4?-43:-48)&&this.grounded)this.win();
