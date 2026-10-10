@@ -43,7 +43,8 @@ Les événements sont numérotés par l’hôte et dédupliqués ; les fichiers 
 chargent une fois depuis GitHub Pages, sans service TTS à l’exécution.
 
 Les sons des cinq autres épreuves sont désormais des fichiers, avec annonces
-françaises, mais **leurs règles et décors n’ont pas été refondus dans ce lot**.
+françaises. La correction ultérieure du pont est décrite dans [bridge.md](bridge.md) ;
+les quatre autres épreuves conservent leurs règles et décors.
 Les musiques/bruitages sont des créations synthétisées puis rendues en fichiers,
 pas des enregistrements de la série. Les exclamations sont des voix neuronales,
 pas des cris joués par un comédien. Voir `public/audio/CREDITS.md` et la fiche
@@ -71,7 +72,7 @@ l’impact, puis figer les corps. Aucun modèle extérieur non licencié n’est
 
 ## Réseau : quatre joueurs réellement pris en charge
 
-Le protocole v2 garde PeerJS et l’autorité de l’hôte : simulation à 60 Hz,
+Le protocole v3 garde PeerJS et l’autorité de l’hôte : simulation à 60 Hz,
 commandes normalisées, états environ toutes les 80 ms, mouvements des invités
 au plus toutes les 50 ms avec battement lorsqu’ils sont inchangés. Les effets
 sont transmis depuis le dernier envoi de chaque connexion ; l’hôte garde un
@@ -129,11 +130,11 @@ Projection obtenue avec le script, pour un événement récent par paquet :
 
 | Population synthétique | Octets par état JSON | Débit montant total de l’hôte estimé |
 | --- | ---: | ---: |
-| 4 | 2 552 | 0,77 Mbit/s |
-| 20 | 10 754 | 20,43 Mbit/s |
-| 50 | 26 144 | 128,11 Mbit/s |
-| 100 | 51 794 | 512,76 Mbit/s |
+| 4 | 2 668 | 0,80 Mbit/s |
+| 20 | 11 334 | 21,53 Mbit/s |
+| 50 | 27 594 | 135,21 Mbit/s |
+| 100 | 54 694 | 541,47 Mbit/s |
 
 Hors surcoût SCTP/DTLS/IP, retransmissions et messages de salon. Ce tableau
 est une projection de la structure JSON actuelle, pas un test de charge de
-ces populations.
+ces populations. Le cas de mesure ne contient pas les impacts cumulés du pont.

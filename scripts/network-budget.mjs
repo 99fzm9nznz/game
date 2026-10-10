@@ -1,6 +1,6 @@
 // Codec/bandwidth estimates only. Synthetic rosters do not lift the playable cap.
 import {Match} from '../src/match.js';
-const host='arena-six-v2-ABCDEFGH',match=new Match(host,'Alice');
+const host='arena-six-v3-ABCDEFGH',match=new Match(host,'Alice');
 for(let i=1;i<4;i++)match.add(`00000000-0000-4000-8000-00000000000${i}`,'Joueur '+i);
 match.start();match.phase=100;
 for(let tick=0;tick<600;tick++){

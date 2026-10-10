@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game,TRACE_PATH} from '../src/rules.js';
 import {Match,applySnapshot,snapshotGame,cleanName} from '../src/match.js';
-const two=()=>{const match=new Match('host','Alice');match.add('guest','Bob');match.start();return match;};
+const two=()=>{const match=new Match('host','Alice',new Game(),()=>0);match.add('guest','Bob');match.start();return match;};
 const tick=(match,seconds)=>{for(let t=0;t<seconds;t+=1/120)match.update(1/120);};
 test('room requires two players, caps at four and refuses joining mid-game',()=>{const m=new Match('host','Alice');assert.equal(m.start(),false);assert.ok(m.add('b','Bob'));assert.ok(m.add('c','Chloé'));assert.ok(m.add('d','David'));assert.equal(m.add('e','Extra'),false);assert.ok(m.start());assert.equal(m.add('late','Late'),false);});
 test('both players share every red/green phase',()=>{const m=two();tick(m,4);for(const p of m.players.values())assert.equal(p.game.red,m.red);assert.equal(m.red,true);tick(m,2.5);for(const p of m.players.values())assert.equal(p.game.red,m.red);});

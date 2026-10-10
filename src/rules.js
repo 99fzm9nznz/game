@@ -1,13 +1,13 @@
 import {resetSun,advanceSun} from './sun-cycle.js';
+import {createBridgeLayout,secureRandom} from './bridge.js';
 export const STAGES = [
   {name:'1, 2, 3 soleil',subtitle:'La cour des silences',time:70,kind:'run',instruction:'Avance au feu vert. Au feu rouge, immobilise-toi, même pendant un saut. Contourne les barrières pour atteindre la ligne.',controls:'ZQSD / WASD ou flèches · Espace : sauter'},
   {name:'Le Dalgona',subtitle:'Une main parfaitement calme',time:65,kind:'trace',instruction:'Maintiens le doigt ou le clic et suis le contour de l’étoile depuis le point lumineux. Tu peux relâcher pour reprendre. Trois écarts brisent le biscuit.',controls:'Souris ou doigt : tracer lentement le contour'},
   {name:'Le tir à la corde',subtitle:'Trouve le rythme',time:35,kind:'tug',instruction:'Appuie quand le curseur entre dans la zone verte. Chaque traction précise rapproche ton équipe de la victoire.',controls:'Espace ou bouton TIRER · Vise la zone verte'},
   {name:'Les billes',subtitle:'Précision sous pression',time:70,kind:'marbles',instruction:'Vise le cercle et dose la puissance en maintenant le bouton, puis relâche pour lancer. Réussis trois lancers avant cinq erreurs.',controls:'← / → ou curseur : viser · Maintenir Espace / LANCER : doser'},
-  {name:'Le pont de verre',subtitle:'Choisis ton chemin',time:75,kind:'bridge',instruction:'Une dalle par paire est solide. Observe les fissures : le verre fragile est légèrement rosé. Saute entre les rangées et change de côté si nécessaire.',controls:'ZQSD / WASD ou flèches · Espace : sauter'},
+  {name:'Le pont de verre',subtitle:'Choisis ton chemin',time:75,kind:'bridge',instruction:'Deux vitres identiques, une seule résiste. Saute, observe les choix des autres et mémorise les trous. Atteins la sortie avant la fin des 75 secondes.',controls:'ZQSD / WASD ou flèches · Espace : sauter'},
   {name:'La dernière course',subtitle:'Un seul objectif : la sortie',time:65,kind:'run',instruction:'Franchis les haies et les fosses, évite les barres rouges en mouvement et rejoins la porte dorée. La victoire est au bout du parcours.',controls:'ZQSD / WASD ou flèches · Espace : sauter'},
 ];
-export const SAFE_GLASS=[0,1,1,0,1,0,0,1];
 export const OBSTACLES=[{x:-4,z:-10,w:6,d:1.2,h:.95},{x:5,z:-22,w:7,d:1.2,h:1.15},{x:-3,z:-35,w:6,d:1.2,h:.9}];
 export const HURDLES=[{x:0,z:-7,w:16,d:.65,h:.85},{x:0,z:-22,w:16,d:.65,h:.95},{x:0,z:-39,w:16,d:.65,h:.9}];
 export const PITS=[[-17,-14],[-35,-32]];
@@ -23,11 +23,14 @@ export function supportsBridge(x,z,broken=new Set()){
 export function glassAt(x,z){for(let row=0;row<8;row++)if(Math.abs(z-(-3-row*5))<1.9)for(let side=0;side<2;side++)if(Math.abs(x-(side?1.65:-1.65))<1.35)return {row,side};return null;}
 export function marbleLanding(aim,power){const distance=4+power*14;return {x:Math.sin(aim*.36)*distance,z:5-Math.cos(aim*.36)*distance};}
 export class Game {
- constructor(){this.stage=0;this.status='intro';this.position={x:0,y:0,z:6};this.elapsed=0;this.events=[];this.reset(0,false);}
- reset(stage=this.stage,play=true){this.stage=stage;this.status=play?'playing':'intro';this.remaining=STAGES[stage].time;this.position={x:stage===4?-1.65:0,y:0,z:6};this.vy=0;this.grounded=true;this.elapsed=0;this.lastStep=0;resetSun(this);this.externalSun=false;this.death=null;this.effects=[];this.transition=0;this.message='';this.trace=0;this.strikes=0;this.pull=.5;this.lastPull=-1;this.broken=new Set();this.aim=0;this.power=0;this.charging=false;this.shot=null;this.hits=0;this.misses=0;this.targetX=-1.4;this.emit('stage',{stage});}
+ #bridgeLayout;
+ #random;
+ constructor(random=secureRandom){this.#random=random;this.stage=0;this.status='intro';this.position={x:0,y:0,z:6};this.elapsed=0;this.events=[];this.reset(0,false);}
+ reset(stage=this.stage,play=true,bridgeLayout){this.#bridgeLayout=stage===4?(bridgeLayout||createBridgeLayout(this.#random)):null;this.stage=stage;this.status=play?'playing':'intro';this.remaining=STAGES[stage].time;this.position={x:stage===4?-1.65:0,y:0,z:6};this.vy=0;this.grounded=true;this.elapsed=0;this.lastStep=0;resetSun(this);this.externalSun=false;this.death=null;this.effects=[];this.transition=0;this.message='';this.trace=0;this.strikes=0;this.pull=.5;this.lastPull=-1;this.broken=new Set();this.glassBreaks=[];this.fall=null;this.aim=0;this.power=0;this.charging=false;this.shot=null;this.hits=0;this.misses=0;this.targetX=-1.4;this.emit('stage',{stage});}
  emit(type,extra={}){const event={type,...extra,seq:this.effectSeq=(this.effectSeq||0)+1,stage:this.stage,at:this.elapsed,position:{...this.position}};this.events.push(event);this.effects.push(event);if(this.effects.length>32)this.effects.shift();}
  lose(message){if(this.status!=='playing')return;this.status='lost';this.message=message;this.death={at:this.elapsed,position:{...this.position},cause:this.stage===0?'shot':'fall',seed:Math.round((this.elapsed*137+this.position.x*31+this.position.z*17)*100)>>>0};this.emit('lose',{death:this.death});}
  win(){if(this.status!=='playing')return;this.status=this.stage===5?'won':'transition';this.transition=3.2;this.message=this.stage===5?'Tu as franchi les six épreuves. Tu es le dernier survivant.':'Épreuve réussie. La prochaine commence dans quelques secondes.';this.emit('win');}
+ beginFall(before,dt){this.fall={at:this.elapsed,position:{...this.position},velocity:{x:(this.position.x-before.x)/dt,y:this.vy,z:(this.position.z-before.z)/dt}};}
  jump(){if(this.status==='playing'&&[0,4,5].includes(this.stage)&&this.grounded){this.vy=9;this.grounded=false;this.emit('jump');}}
  tracePoint(x,y){if(this.status!=='playing'||this.stage!==1)return;let best=-1,dist=Infinity;for(let i=this.trace;i<Math.min(TRACE_PATH.length,this.trace+15);i++){const p=TRACE_PATH[i],d=Math.hypot(p.x-x,p.y-y);if(d<dist){dist=d;best=i;}}if(dist<18){this.trace=Math.max(this.trace,best);if(this.trace>=TRACE_PATH.length-3)this.win();return true;}return false;}
  crack(){if(this.status!=='playing'||this.stage!==1)return;this.strikes++;this.emit('crack');if(this.strikes>=3)this.lose('Le biscuit s’est brisé. Reprends le tracé lentement, en suivant la ligne dorée.');}
@@ -42,7 +45,7 @@ export class Game {
  if(this.stage===3){this.aim=Math.max(-1,Math.min(1,this.aim+(input.side||0)*dt*.85));if(this.charging)this.power=(this.power+dt*.58)%1;if(this.shot){this.shot.age+=dt;if(this.shot.age>=1.15){if(this.shot.hit){this.hits++;this.emit('score');}else{this.misses++;this.emit('miss');}this.shot=null;this.targetX=[-1.4,1.1,0,1.7,-.9,.6][(this.hits+this.misses)%6];if(this.hits>=3)this.win();else if(this.misses>=5)this.lose('Cinq billes ont manqué le cercle. Ajuste la direction et la puissance.');}}return;}
  if(this.stage===1)return;
  if(this.stage===0){if(!this.externalSun&&advanceSun(this,dt))this.emit('signal',{red:this.red});}
- const speed=this.stage===4?5.8:7;const forward=input.forward||0,side=input.side||0;const norm=Math.max(1,Math.hypot(forward,side));const nx=Math.max(this.stage===4?-4:-8,Math.min(this.stage===4?4:8,this.position.x+side*speed*dt/norm));const nz=Math.min(8,this.position.z-forward*speed*dt/norm);
+ const speed=this.stage===4?5.8:7;const forward=input.forward||0,side=input.side||0;const norm=Math.max(1,Math.hypot(forward,side));const nx=Math.max(this.stage===4?-4:-8,Math.min(this.stage===4?4:8,this.position.x+(this.fall?this.fall.velocity.x:side*speed/norm)*dt));const nz=Math.min(8,this.position.z+(this.fall?this.fall.velocity.z:-forward*speed/norm)*dt);
  const obstacles=this.stage===0?OBSTACLES:this.stage===5?HURDLES:[];
  const blocked=(x,z)=>obstacles.some(o=>Math.abs(x-o.x)<o.w/2+.3&&Math.abs(z-o.z)<o.d/2+.25&&this.position.y<o.h);
  const before={...this.position};const moveX=!blocked(nx,this.position.z)?nx:this.position.x,moveZ=!blocked(moveX,nz)?nz:this.position.z;
@@ -50,13 +53,19 @@ export class Game {
  this.position.x=moveX;this.position.z=moveZ;
  const oldY=this.position.y;
  let supported=true;
- if(this.stage===4)supported=supportsBridge(this.position.x,this.position.z,this.broken);
+ if(this.stage===4)supported=!this.fall&&supportsBridge(this.position.x,this.position.z,this.broken);
  if(this.stage===5)supported=!PITS.some(([a,b])=>this.position.z>a&&this.position.z<b);
  const surface=obstacles.filter(o=>Math.abs(this.position.x-o.x)<o.w/2+.2&&Math.abs(this.position.z-o.z)<o.d/2+.2&&oldY>=o.h-.03).reduce((h,o)=>Math.max(h,o.h),0);
- if(!this.grounded||!supported||this.position.y>surface+.03){this.grounded=false;this.vy-=22*dt;this.position.y+=this.vy*dt;if(this.position.y<=surface&&this.vy<=0&&supported&&oldY>=surface-.2){this.position.y=surface;this.vy=0;this.grounded=true;this.emit('land');}}
- if(this.stage===4&&this.grounded){const tile=glassAt(this.position.x,this.position.z);if(tile&&SAFE_GLASS[tile.row]!==tile.side){this.broken.add(`${tile.row}:${tile.side}`);this.grounded=false;this.vy=-1;this.emit('glass');}}
+ if(!this.grounded||!supported||this.position.y>surface+.03){this.grounded=false;this.vy-=22*dt;this.position.y+=this.vy*dt;if(this.position.y<=surface&&this.vy<=0&&supported&&oldY>=surface-(this.stage===4?1e-6:.2)){this.position.y=surface;this.vy=0;this.grounded=true;this.emit('land');}}
+ if(this.stage===4&&this.grounded){const tile=glassAt(this.position.x,this.position.z);if(tile&&this.#bridgeLayout[tile.row]!==tile.side){
+  const key=`${tile.row}:${tile.side}`,seed=Math.floor(this.#random()*4294967296)>>>0;
+  this.broken.add(key);this.grounded=false;this.vy=-1;
+  const impact={key,row:tile.row,side:tile.side,seed,at:this.elapsed,position:{x:tile.side?1.65:-1.65,y:0,z:-3-tile.row*5}};
+  this.glassBreaks.push(impact);this.beginFall(before,dt);this.emit('glass',{impact});
+ }}
+ if(this.stage===4&&!this.grounded&&this.position.y<-.2&&!this.fall)this.beginFall(before,dt);
  if(this.grounded&&Math.hypot(this.position.x-before.x,this.position.z-before.z)>.001&&this.elapsed-this.lastStep>.34){this.lastStep=this.elapsed;this.emit('step',{surface:this.stage===4?'metal':this.stage===5?'stone':'sand'});}
- if(this.position.y<-4){this.lose(this.stage===4?'La dalle a cédé ou tu as manqué ton saut. Observe les fissures avant de choisir.':'Tu es tombé dans une fosse. Saute juste avant le bord.');return;}
+ if(this.position.y<-4){this.lose(this.stage===4?'La dalle a cédé ou tu as manqué ton saut. Chaque choix est un pari : mémorise les passages déjà révélés.':'Tu es tombé dans une fosse. Saute juste avant le bord.');return;}
  if(this.stage===5&&this.position.y<1.35){for(const b of BEAMS)if(Math.abs(this.position.z-b.z)<.5&&Math.abs(this.position.x-Math.sin(this.elapsed*b.speed+b.phase)*6)<2){this.lose('Une barre mobile t’a touché. Saute au-dessus ou passe sur le côté.');return;}}
  if(this.position.z<=(this.stage===4?-43:-48)&&this.grounded)this.win();
  }

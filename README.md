@@ -6,7 +6,7 @@ Jeu de survie en 3D, en solo ou en salons de 2 à 4 joueurs, inspiré des épreu
 2. **Dalgona** : découper une étoile à la souris ou au doigt sans briser le biscuit.
 3. **Tir à la corde** : tirer au rythme du curseur, dans la zone verte.
 4. **Billes** : ajuster la direction et la puissance pour réussir trois lancers.
-5. **Pont de verre** : observer les fissures et sauter sur les dalles solides.
+5. **Pont de verre** : choisir entre des vitres identiques, mémoriser les ruptures et traverser en 75 secondes.
 6. **Dernière course** : franchir des haies et des fosses, éviter les barres mobiles, atteindre la sortie.
 
 ## Lancer le jeu
@@ -75,7 +75,15 @@ Le jeu livre **28 fichiers OGG** : comptine et annonces françaises, exclamation
 
 Le mixeur Web Audio spatialise les événements, suit la caméra et suspend les sons pendant la pause. Le navigateur active le son après une interaction. L’import facultatif de musique reste disponible dans le code ; les sons intégrés sont utilisés par défaut. `scripts/generate-audio.py` permet de reproduire les assets avec un modèle vocal local, NumPy/SciPy, Piper et FFmpeg ; ces outils ne sont pas nécessaires pour jouer ou construire le site.
 
-Les personnages utilisent une hiérarchie articulée avec genoux et coudes, survêtements numérotés et identités de salon. La cour bénéficie de décors et de gardes enrichis. Les chutes sont une solution déterministe adaptée à WebGL, avec particules sous gravité ; elles ne constituent pas une simulation rigide complète. Le rendu reste stylisé. Les cinq autres épreuves conservent leurs règles et leurs décors, tout en utilisant les nouveaux personnages et fichiers sonores. Les figurants solo restent décoratifs et ne sont pas des bots de salon.
+Les personnages utilisent une hiérarchie articulée avec genoux et coudes, survêtements numérotés et identités de salon. La cour bénéficie de décors et de gardes enrichis. Les chutes sont une solution déterministe adaptée à WebGL, avec particules sous gravité ; elles ne constituent pas une simulation rigide complète. Le rendu reste stylisé. Le pont reçoit la correction décrite ci-dessous. Les quatre autres épreuves conservent leurs règles et leurs décors, tout en utilisant les nouveaux personnages et fichiers sonores. Les figurants solo restent décoratifs et ne sont pas des bots de salon.
+
+## Pont de verre : choix sans indice
+
+Les 16 vitres intactes partagent la même géométrie et le même matériau. Aucun trait de fissure n’est créé avant un impact. L’hôte tire huit choix indépendants avec l’aléa cryptographique du navigateur à chaque passage au pont ; le chemin reste privé dans la simulation et n’est pas envoyé aux invités.
+
+Au premier contact avec une vitre fragile, elle disparaît pour tous : fracture éclair, 48 à 96 éclats triangulaires sous gravité, bruitage de verre intégré et chute articulée suivie par la caméra du joueur concerné. Les trous persistent après la disparition des particules. Les solides résistent ; le délai commun de 75 secondes élimine les joueurs qui n’ont pas traversé. Les éliminés peuvent observer les survivants. Le protocole v3 sépare les salons de cette version des anciens clients ; actualiser le jeu et créer un nouveau salon après la mise à jour.
+
+Voir [le détail des règles et vérifications](docs/bridge.md).
 
 ## Validation
 

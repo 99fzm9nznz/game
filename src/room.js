@@ -1,7 +1,7 @@
 import {Peer} from 'peerjs';
 import {MAX_BUFFERED_BYTES,statePacket,shouldSendInput,freshEffect} from './network-sync.js';
 import {Match,MAX_PLAYERS,VERSION,applySnapshot,cleanName} from './match.js';
-const PREFIX='arena-six-v2-';
+const PREFIX='arena-six-v3-';
 const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 export function roomCode(){const bytes=crypto.getRandomValues(new Uint8Array(8));return [...bytes].map(v=>alphabet[v%alphabet.length]).join('');}
 export function normalizeCode(value){if(typeof value!=='string')return '';try{const url=new URL(value);value=url.searchParams.get('room')||'';}catch{}const code=value.trim().toUpperCase();return /^[A-HJ-NP-Z2-9]{8}$/.test(code)?code:'';}
